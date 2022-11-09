@@ -1,0 +1,15 @@
+#!/bin/sh
+ctags -R --links=no *
+rm -rf ./cscope.*
+find . \( \
+			-name '*.c' -o \
+			-name '*.cpp' -o \
+			-name '*.cc' -o \
+			-name '*.h' -o \
+			-name '*.s' -o \
+			-name '*.S' -o \
+			-name '*.def' -o \
+			-name 'Makefile' \
+		\) \
+		-print > cscope.files
+cscope -b -q -k

@@ -1,0 +1,7 @@
+gncs_debian_build:
+  image: 'linux-devel:18.04'
+  hostname: 'gncs-debian-build'
+  ports:
+    - '50001:22'
+  volumes:
+    - '/home:/hhome'

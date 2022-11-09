@@ -1,0 +1,148 @@
+#!/usr/bin/perl
+
+# Start at the top.
+
+# Usage : rgrep [-n][-l][-h] pattern
+# [-n]  : print file name where pattern is found.
+# [-l]  : print line number where pattern is found.
+# [-h]  : print help message
+ 
+# Handle
+ 
+if($ARGV[0] eq '-n')
+{
+  shift;                # Extract argument
+  $option = "n";
+}
+elsif($ARGV[0] eq '-l')
+{
+  shift;
+  $option = "l";
+}
+elsif($ARGV[0] eq '-h' || $#ARGV == -1)
+{
+  shift;
+  print "Usage : rgrep [-n][-l][-h] pattern\n";
+  print "[-n]  : print file name where pattern is found.\n";
+  print "[-l]  : print line number where pattern is found.\n";
+  print "[-h]  : print help message.\n";
+  exit;
+}
+else
+{
+  $option = " ";
+}
+
+
+# Get pattern and protect the delimiter we'll use.
+ 
+$pat = shift;
+$pat =~ s/!/\\!/g;
+
+&dodir('.');
+
+sub dodir
+{
+  local($dir, $nlink) = @_;
+  local($dev, $ino, $mode, $subcount);
+
+  # At the top level, we need to find nlink ourselves.
+
+  ($dev, $ino, $mode, $nlink) = stat('.') unless $nlink;
+
+  # Get the list of files in the current directory.
+
+  opendir(DIR, '.') || die "Can't open $dir";
+  local(@filenames) = readdir(DIR);
+  closedir(DIR);
+
+  if($nlink == 2)	# This dir has no subdirectories.
+  {
+    for(@filenames)
+    {
+      next if $_ eq '.';
+      next if $_ eq '..';
+      $file = "$dir/$_";
+
+      open(FILE, $_) || do
+      {
+        print STDERR "Can't open $_: $!\n";
+        next;
+      };
+      &grep() if -T FILE;
+      close(FILE);
+    }
+  }
+  else			# This dir has subdirectories.
+  {
+    $subcount = $nlink - 2;
+    for (@filenames)
+    {
+      next if $_ eq '.';
+      next if $_ eq '..';
+      next if $_ eq '.svn';
+      next if $_ eq 'tags';
+      next if $_ eq 'cscope.out';
+      next if $_ eq 'cscope.files';
+      next if $_ eq 'cscope.in.out';
+      next if $_ eq 'cscope.po.out';
+      $file = "$dir/$_";
+
+      open(FILE, $_) || do
+      {
+        print STDERR "Can't open $_: $!\n";
+        next;
+      };
+      &grep() if -T FILE;
+      close(FILE);
+
+      next if $subcount == 0;	# Seen all the subdirs?
+
+      # Get link count and check for directoriness.
+
+      ($dev, $ino, $mode, $nlink) = lstat($_);
+      next unless -d _;
+
+      # It really is a directory, so do it recursively.
+
+      chdir $_ || die "Can't cd to $file";
+      &dodir($file, $nlink);
+      chdir '..';
+      --$subcount;
+    }
+  }
+}
+
+
+sub grep
+{
+  $lineNumber = 0;	# Reset lineNumber
+  $flag	= 0;		# 0 : FALSE, 1: TRUE
+ 
+  while(<FILE>)
+  {
+    $lineNumber++;
+ 
+    if(m!$pat!)
+    {
+      if($option eq 'n')
+      {
+        $flag = 1;
+      }
+      elsif($option eq 'l')
+      {
+          print $lineNumber, "($file)", "\n";
+      }
+      else
+      {
+          print $file, "($lineNumber)", ": ", $_;
+      }
+    }
+  }
+
+  if($flag == 1)
+  {
+    print "$file\n";
+  }
+}
+

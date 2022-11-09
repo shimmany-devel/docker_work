@@ -1,0 +1,75 @@
+" <============= Vundle 관련시작
+set nocompatible              " be iMproved, required
+filetype off                  " required
+
+" set the runtime path to include Vundle and initialize
+set rtp+=~/.vim/bundle/Vundle.vim
+call vundle#begin()
+
+Plugin 'VundleVim/Vundle.vim'
+
+call vundle#end()            " required
+filetype plugin indent on    " required
+" To ignore plugin indent changes, instead use:
+"filetype plugin on
+"
+" Brief help
+" :PluginList       - lists configured plugins
+" :PluginInstall    - installs plugins; append `!` to update or just :PluginUpdate
+" :PluginSearch foo - searches for foo; append `!` to refresh local cache
+" :PluginClean      - confirms removal of unused plugins; append `!` to auto-approve removal
+"
+" see :h vundle for more details or wiki for FAQ
+" Put your non-Plugin stuff after this line
+" <============= Vundle 관련끝
+
+set cpoptions-=u
+set ul=1000
+set hlsearch
+set mouse-=a
+set ruler
+set ts=4
+set shiftwidth=4
+set softtabstop=4
+set incsearch
+set backspace=eol,start,indent
+set history=1000
+if has("autocmd")
+au BufReadPost * if line("'\"") > 0 && line("'\"") <= line("$") | exe "normal! g`\"" |
+endif
+set csprg=/usr/bin/cscope
+set csto=0
+set cst
+set encoding=utf-8
+set fileencodings=utf-8
+
+set csverb
+filetype plugin on
+set formatoptions-=cro
+set paste
+autocmd FileType *.[ch]{,pp} call FoldPreprocessor()
+function! FoldPreprocessor()
+    set foldmarker=#ifdef,#endif
+    set foldmethod=marker
+endfunction
+syntax on
+set smartcase
+set ruler
+set tags=./tags;/
+set autochdir
+set csre
+
+" cscope DB 자동 로드를 위한 설정
+function! LoadCscope()
+  let db = findfile("cscope.out", ".;")
+  if (!empty(db))
+    let path = strpart(db, 0, match(db, "/cscope.out$"))
+    set nocscopeverbose " suppress 'duplicate connection' error
+    exe "cs add " . db . " " . path
+    set cscopeverbose
+  " else add the database pointed to by environment variable 
+  elseif $CSCOPE_DB != "" 
+    cs add $CSCOPE_DB
+  endif
+endfunction
+au BufEnter /* call LoadCscope()
