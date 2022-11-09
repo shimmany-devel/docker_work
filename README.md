@@ -1,7 +1,7 @@
 # docker_work
 docker files, compose file
 
-===== linux host =====
+===== linux host =====\
 cd linux-devel
 docker build -t linux-devel:18.04
 
@@ -12,7 +12,7 @@ docker-compose up -d  -->  server running
 
 docker ps -a  <-- check created server from image
 
-===== windows host =====
+===== windows host =====\
 if not wsl2, docker image could be created, so take image form image create in linux host
 
 docker image dump (linux host) :  
